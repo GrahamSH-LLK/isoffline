@@ -5,12 +5,12 @@ import {
   toNodeListener,
   readBody,
   createRouter,
-  send,
+  createError,
   sendError,
   getRouterParams,
 } from "h3";
 import { listen } from "listhen";
-const client = createClient();
+const client = createClient({url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`});
 
 client.on("error", (err) => console.log("Redis Client Error", err));
 
@@ -22,7 +22,7 @@ const router = createRouter()
     "/ping",
     eventHandler(async (event) => {
       let body = await readBody(event);
-      if (!body.username) return sendError(event);
+      if (!body.username) return sendError(event,createError('test',) );
       let key = `user-${body.username}`;
       await client.set(key, "true");
       await client.expire(key, 5 * 60);
