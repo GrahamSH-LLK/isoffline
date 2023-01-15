@@ -9,23 +9,32 @@ import {
   sendError,
   getRouterParams,
 } from "h3";
-import {defineCorsEventHandler} from '@nozomuikuta/h3-cors'
+import { defineCorsEventHandler } from "@nozomuikuta/h3-cors";
 import { listen } from "listhen";
-const client = createClient({url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`});
+const client = createClient({
+  url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
+});
 
-client.on("error", (err) => console.log("Redis Client Error", err));
+client.on("error", (err) => {
+  console.log("Redis Client Error", err);
+  process.exit(1);
+});
 
 await client.connect();
 
 const app = createApp();
-app.use(defineCorsEventHandler({ /* options */ }))
+app.use(
+  defineCorsEventHandler({
+    /* options */
+  })
+);
 
 const router = createRouter()
   .post(
     "/ping",
     eventHandler(async (event) => {
       let body = await readBody(event);
-      if (!body.username) return sendError(event,createError('test',) );
+      if (!body.username) return sendError(event, createError("test"));
       let key = `user-${body.username.toLowerCase()}`;
       await client.set(key, "true");
       await client.expire(key, 5 * 60);
@@ -37,9 +46,10 @@ const router = createRouter()
     eventHandler(async (event) => {
       const params = getRouterParams(event);
       let key = `user-${params.name}`;
-      const online = !!await client.exists(key);
-      return {online};
+      const online = !!(await client.exists(key));
+      return { online };
     })
+    
   );
 
 app.use(router);
