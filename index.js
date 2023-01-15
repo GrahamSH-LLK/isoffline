@@ -26,7 +26,7 @@ const router = createRouter()
     eventHandler(async (event) => {
       let body = await readBody(event);
       if (!body.username) return sendError(event,createError('test',) );
-      let key = `user-${body.username}`;
+      let key = `user-${body.username.toLowerCase()}`;
       await client.set(key, "true");
       await client.expire(key, 5 * 60);
       return { success: true };
