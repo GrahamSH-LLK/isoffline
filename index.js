@@ -9,6 +9,7 @@ import {
   sendError,
   getRouterParams,
 } from "h3";
+import {defineCorsEventHandler} from '@nozomuikuta/h3-cors'
 import { listen } from "listhen";
 const client = createClient({url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`});
 
@@ -17,6 +18,8 @@ client.on("error", (err) => console.log("Redis Client Error", err));
 await client.connect();
 
 const app = createApp();
+app.use(defineCorsEventHandler({ /* options */ }))
+
 const router = createRouter()
   .post(
     "/ping",
