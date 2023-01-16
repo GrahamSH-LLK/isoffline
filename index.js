@@ -45,7 +45,7 @@ const router = createRouter()
     "/status/:name",
     eventHandler(async (event) => {
       const params = getRouterParams(event);
-      let key = `user-${params.name}`;
+      let key = `user-${params.name.toLowerCase()}`;
       const online = !!(await client.exists(key));
       return { online };
     })
