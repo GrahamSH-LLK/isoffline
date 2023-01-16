@@ -12,7 +12,9 @@ import {
 import { defineCorsEventHandler } from "@nozomuikuta/h3-cors";
 import { listen } from "listhen";
 const client = createClient({
-  url: `redis://${process.env.REDIS_HOST || 'localhost'}:${process.env.REDIS_PORT || 6379}`,
+  url: `redis://${process.env.REDIS_HOST || "localhost"}:${
+    process.env.REDIS_PORT || 6379
+  }`,
 });
 
 client.on("error", (err) => {
@@ -29,6 +31,13 @@ app.use(
   })
 );
 
+const markAsUser = async (username) => {
+  const alreadyMarked = !!(await client.exists(key));
+  if (!alreadyMarked) {
+    await client.set(`${username}-exists`, 'true')
+  }
+};
+
 const router = createRouter()
   .post(
     "/ping",
@@ -38,6 +47,7 @@ const router = createRouter()
       let key = `user-${body.username.toLowerCase()}`;
       await client.set(key, "true");
       await client.expire(key, 5 * 60);
+      markAsUser();
       return { success: true };
     })
   )
@@ -45,11 +55,17 @@ const router = createRouter()
     "/status/:name",
     eventHandler(async (event) => {
       const params = getRouterParams(event);
-      let key = `user-${params.name.toLowerCase()}`;
+      const username = params.name.toLowerCase()
+      let key = `user-${username}`;
       const online = !!(await client.exists(key));
+      if (!online) {
+        const isUser = !!(await client.exists(`${username}`));
+        if (!isUser) {
+          return sendError(event, createError({status:404}));
+        }
+      }
       return { online };
     })
-    
   );
 
 app.use(router);
