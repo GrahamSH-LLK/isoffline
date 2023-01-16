@@ -43,11 +43,12 @@ const router = createRouter()
     "/ping",
     eventHandler(async (event) => {
       let body = await readBody(event);
-      if (!body.username) return sendError(event, createError({ status: 400 }));
-      let key = `user-${body.username.toLowerCase()}`;
+      const username = body.username?.toLowerCase()
+      if (!username) return sendError(event, createError({ status: 400 }));
+      let key = `user-${username}`;
       await client.set(key, "true");
       await client.expire(key, 5 * 60);
-      markAsUser();
+      markAsUser(username);
       return { success: true };
     })
   )
