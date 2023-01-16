@@ -34,7 +34,7 @@ app.use(
 const markAsUser = async (username) => {
   const alreadyMarked = !!(await client.exists(key));
   if (!alreadyMarked) {
-    await client.set(`${username}-exists`, 'true')
+    await client.set(`${username}-exists`, "true");
   }
 };
 
@@ -43,7 +43,7 @@ const router = createRouter()
     "/ping",
     eventHandler(async (event) => {
       let body = await readBody(event);
-      if (!body.username) return sendError(event, createError({status: 400}));
+      if (!body.username) return sendError(event, createError({ status: 400 }));
       let key = `user-${body.username.toLowerCase()}`;
       await client.set(key, "true");
       await client.expire(key, 5 * 60);
@@ -55,13 +55,13 @@ const router = createRouter()
     "/status/:name",
     eventHandler(async (event) => {
       const params = getRouterParams(event);
-      const username = params.name.toLowerCase()
+      const username = params.name.toLowerCase();
       let key = `user-${username}`;
       const online = !!(await client.exists(key));
       if (!online) {
-        const isUser = !!(await client.exists(`${username}`));
+        const isUser = !!(await client.exists(`${username}-exists`));
         if (!isUser) {
-          return sendError(event, createError({status:404}));
+          return sendError(event, createError({ status: 404 }));
         }
       }
       return { online };
