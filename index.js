@@ -47,7 +47,7 @@ const router = createRouter()
       if (!username) return sendError(event, createError({ status: 400 }));
       let key = `user-${username}`;
       await client.set(key, "true");
-      await client.expire(key, 0.1 * 60);
+      await client.expire(key, 5 * 60);
       markAsUser(username);
       return { success: true };
     })
