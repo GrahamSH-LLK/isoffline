@@ -15,6 +15,7 @@ const client = createClient({
   url: `redis://${process.env.REDIS_HOST || "localhost"}:${
     process.env.REDIS_PORT || 6379
   }`,
+  password: process.env.REDIS_PW,
 });
 
 client.on("error", (err) => {
