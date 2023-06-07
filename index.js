@@ -33,15 +33,19 @@ app.use(
 );
 
 const markAsUser = async (username) => {
-  const alreadyMarked = !!(await client.exists(`${username}-exists`));
+  let key = `${username}-exists`
+
+  const alreadyMarked = !!(await client.exists(key));
   if (!alreadyMarked) {
     await client.set(`${username}-exists`, "true");
   }
+  await client.expire(60 * 60 * 24 * 7);
+
 };
 
 const router = createRouter()
   .post(
-    "/ping",
+    "/online",
     eventHandler(async (event) => {
       let body = await readBody(event);
       const username = body.username?.toLowerCase()
@@ -54,19 +58,16 @@ const router = createRouter()
     })
   )
   .get(
-    "/status/:name",
+    "/isonline/:name",
     eventHandler(async (event) => {
       const params = getRouterParams(event);
       const username = params.name.toLowerCase();
       let key = `user-${username}`;
       const online = !!(await client.exists(key));
-      if (!online) {
-        const isUser = !!(await client.exists(`${username}-exists`));
-        if (!isUser) {
-          return sendError(event, createError({ status: 404 }));
-        }
-      }
-      return { online };
+
+      const isUser = !!(await client.exists(`${username}-exists`));
+
+      return { online, scratchtools: isUser, isUser: isUser };
     })
   );
 
